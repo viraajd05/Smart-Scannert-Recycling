@@ -1,0 +1,57 @@
+diff --git a/src/screens/CameraScreen.js b/src/screens/CameraScreen.js
+index 0000000..0000000 100644
+--- a/src/screens/CameraScreen.js
++++ b/src/screens/CameraScreen.js
+@@
+@@
+   const recognizePhotoPlaceholder = async () => {
+     setResult('Analyzing...');
+     // Simulate network / model latency
+     await new Promise((r) => setTimeout(r, 1200));
+     // Fake categorization — in real implementation replace with model/API result
+     const candidates = ['Plastic (PET)', 'Glass', 'Paper', 'Metal', 'Unknown'];
+     const choice = candidates[Math.floor(Math.random() * candidates.length)];
+     setResult(choice);
+   };
++
++  const sendToAnalyzer = async () => {
++    if (!photoUri) return;
++    setResult('Uploading...');
++    try {
++      const form = new FormData();
++      // Expo file URIs require a name and type when using FormData
++      form.append('image', { uri: photoUri, name: 'photo.jpg', type: 'image/jpeg' });
++
++      const res = await fetch('http://10.0.2.2:8080/analyze', {
++        method: 'POST',
++        body: form,
++        headers: {
++          Accept: 'application/json'
++        }
++      });
++
++      if (!res.ok) throw new Error('Analyzer returned error');
++      const data = await res.json();
++      setResult(`${data.category} (confidence ${Math.round(data.confidence * 100)}%)`);
++    } catch (err) {
++      console.error(err);
++      setResult('Failed to analyze image');
++    }
++  };
+@@
+         <TouchableOpacity
+           style={[styles.button, !photoUri && styles.buttonDisabled]}
+           onPress={recognizePhotoPlaceholder}
+           disabled={!photoUri}
+         >
+           <Text style={styles.buttonText}>Recognize</Text>
+         </TouchableOpacity>
++
++        <TouchableOpacity
++          style={[styles.button, !photoUri && styles.buttonDisabled]}
++          onPress={sendToAnalyzer}
++          disabled={!photoUri}
++        >
++          <Text style={styles.buttonText}>Send to Analyzer</Text>
++        </TouchableOpacity>
+*** End Patch
